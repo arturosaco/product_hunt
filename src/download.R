@@ -1,13 +1,7 @@
 library(ProjectTemplate)
 load.project()
 
-library(XML)
-library(stringr)
-library(magrittr)
-library(data.table)
-library(ggplot2)
-
-url.list <- paste0("http://www.producthunt.com/?page=", 0:30, "#")
+url.list <- paste0("http://www.producthunt.com/?page=", 0:50, "#")
 
 download.page <- function(url.x){
   doc <- htmlTreeParse(url.x, useInternalNodes = T)
@@ -57,11 +51,12 @@ data$date.1 <- as.Date(data$date.aux, "%B%d%Y")
 data$n.comments.1 <- gsub("[^0-9]", "", data$n.comments) 
 data[data$n.comments.1 == "", "n.comments.1"] <- 0
 data$up.votes <- as.numeric(as.character(data$up.votes))
+
+data$n.comments.1 <- as.numeric(as.character(data$n.comments.1))
 data.dt <- as.data.table(data[, c("name", "up.votes", 
-  "date.1", "n.comments.1")])
+  "date.1", "n.comments.1")]) %>% unique
 setnames(data.dt, c("date.1", "n.comments.1"), 
   c("date", "n.comments"))
-data.dt[, vote.share := up.votes / sum(up.votes), date]
-
-ggplot(data.dt[, max(vote.share), date], 
-  aes(x = date, y = V1)) + geom_line() 
+path.x <- paste0("cache/download_",
+  gsub("-", "_", Sys.Date()), ".rds")
+saveRDS(unique(data.dt), path.x)
