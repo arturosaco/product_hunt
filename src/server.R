@@ -35,7 +35,7 @@ plot.weekly <- function(variable.x, data.x){
 }
 
 shinyServer(function(input, output) {  
-  plot.weekly("Comments", data.dt)
+  observe({plot.weekly(input$variable, data.dt)})
     
   # output$simple_plot <- renderPlot(plot(1:15, -15:-1))
   # output$plot_deb <- renderPlot({

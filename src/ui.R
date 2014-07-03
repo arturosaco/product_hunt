@@ -13,9 +13,14 @@ shinyUI(fluidPage(
        "starting from March 23rd to today."),
 
       p("The plot display one point per day",
-       "indicating the top performing product of the day"),
-      selectInput("variable", "Performance measure", 
-        choices = c("Comments", "Votes"), selected = "Comments")
+       "indicating the top performing product of the day.",
+       "I'm considering two possible performance meassures:"),
+      selectInput("variable", "", 
+        choices = c("Comments", "Votes"), selected = "Comments"),
+       p("Of the two measures I consider the share of comments to be",
+        "more relevant, based on the fact that writing a comment",
+        "requires a (perhaps only slightly) bigger effort and",
+        "therefore it should be a better signal of true interest.")
     ),
     mainPanel(
       uiOutput("ggvis_ui"),
