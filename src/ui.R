@@ -25,8 +25,9 @@ shinyUI(fluidPage(
     ),
     mainPanel(
       helpText("Mouse over to see details"),
-      uiOutput("ggvis_ui"),
-      ggvisOutput("ggvis")
+      # uiOutput("ggvis_ui"),
+      # ggvisOutput("ggvis")
+      plotOutput("plot")
       # tableOutput("predictions"),
       # conditionalPanel(condition = "input.tier1 == 'BEN'",
       #   plotOutput("plot_ben", width = "100%", height = "300px")),
