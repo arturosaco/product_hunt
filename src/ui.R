@@ -1,4 +1,5 @@
 library(shiny)
+library(ggvis)
 
 # Define UI for dataset viewer application
 shinyUI(fluidPage(  
@@ -23,6 +24,7 @@ shinyUI(fluidPage(
         "therefore it should be a better signal of true interest.")
     ),
     mainPanel(
+      helpText("Mouse over to see details"),
       uiOutput("ggvis_ui"),
       ggvisOutput("ggvis")
       # tableOutput("predictions"),

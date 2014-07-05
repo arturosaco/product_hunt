@@ -57,6 +57,8 @@ data.dt <- as.data.table(data[, c("name", "up.votes",
   "date.1", "n.comments.1")]) %>% unique
 setnames(data.dt, c("date.1", "n.comments.1"), 
   c("date", "n.comments"))
-path.x <- paste0("cache/download_",
-  gsub("-", "_", Sys.Date()), ".rds")
-saveRDS(unique(data.dt), path.x)
+
+write.csv(unique(data.dt), "src/download.csv", row.names = FALSE)
+
+
+shinyapps::configureApp("product_hunt_3", size="medium")

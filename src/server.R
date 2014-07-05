@@ -1,10 +1,16 @@
-path.x <- paste0("../cache/processed_",
-  gsub("-", "_", Sys.Date()), ".rds")
-data.dt <- readRDS(path.x)
-# data.1 <- data.dt[max.daily.comment.share == comments.share.w, ]
-# data.1$id <- 1:nrow(data.1)
+install.packages(c('ggvis', 'shiny', 
+  "data.table", "lubridate", "magrittr",
+  "dplyr"))
 
-# data.1 <- data.1 %>% as.data.frame
+library(ggvis)
+library(shiny)
+library(dplyr)
+library(data.table)
+library(lubridate)
+library(magrittr)
+
+data.dt <- fread("processed.csv")
+data.dt[, date := as.Date(date)]
 
 plot.weekly <- function(variable.x, data.x){
   if(variable.x != "Comments"){
@@ -36,11 +42,5 @@ plot.weekly <- function(variable.x, data.x){
 
 shinyServer(function(input, output) {  
   observe({plot.weekly(input$variable, data.dt)})
-    
-  # output$simple_plot <- renderPlot(plot(1:15, -15:-1))
-  # output$plot_deb <- renderPlot({
-  #   print(prediction.plot(input$gov.region,
-  #      input$tier1, input$tier2_deb, input$no.periods, data.case.weekly))
-  # })
 })
 
