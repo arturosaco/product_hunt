@@ -7,9 +7,9 @@ library(datasets)
 
 
 
+data.dt <- read.csv("simple.csv")  
 # Define a server for the Shiny app
 shinyServer(function(input, output) {
-  data.dt <- read.csv("processed.csv")  
   # Fill in the spot we created for a plot
   output$phonePlot <- renderPlot({
     
@@ -21,6 +21,4 @@ shinyServer(function(input, output) {
   })
   output$plot <- renderText(as.character(input$variable))
   output$head1 <- renderTable(head(data.dt))
-  output$ls <- renderText(print(paste(ls(), collapse = ",")))
-  # output$ls <- renderText(as.character(exists("data.dt")))
 })

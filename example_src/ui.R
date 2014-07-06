@@ -30,8 +30,7 @@ shinyUI(
       mainPanel(
         plotOutput("phonePlot"),
         textOutput("plot"),
-        tableOutput("head1"),
-        textOutput("ls")
+        tableOutput("head1")
       )
       
     )
