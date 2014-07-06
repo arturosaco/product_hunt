@@ -1,4 +1,5 @@
 library(shiny)
+library(ggvis)
  
 # Rely on the 'WorldPhones' dataset in the datasets
 # package (which generally comes preloaded).
