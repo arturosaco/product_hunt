@@ -20,6 +20,6 @@ shinyServer(function(input, output) {
             xlab="Year")
   })
   output$plot <- renderText(as.character(input$variable))
-  output$ls <- renderText(as.character(exists("data.dt")))
-  # output$head1 <- renderTable(head(data.dt))
+  # output$ls <- renderText(as.character(exists("data.dt")))
+  # output$head1 <- renderTable(head(WorldPhones))
 })
