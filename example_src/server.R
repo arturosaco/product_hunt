@@ -21,5 +21,5 @@ shinyServer(function(input, output) {
   })
   output$plot <- renderText(as.character(input$variable))
   output$ls <- renderText(as.character(exists("data.dt")))
-  output$head1 <- renderTable(head(data.dt))
+  # output$head1 <- renderTable(head(data.dt))
 })
