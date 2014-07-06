@@ -20,5 +20,5 @@ shinyServer(function(input, output) {
             xlab="Year")
   })
   output$plot <- renderText(as.character(input$variable))
-  output$table <- renderTable(head(data.dt))
+  output$head1 <- renderTable(head(data.dt))
 })
