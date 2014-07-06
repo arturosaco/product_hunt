@@ -1,5 +1,5 @@
-library(shiny)
-library(ggvis)
+library("shiny")
+library("ggvis")
 
 # Define UI for dataset viewer application
 shinyUI(fluidPage(  
