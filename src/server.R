@@ -8,8 +8,8 @@ library(data.table)
 library(lubridate)
 library(magrittr)
 
-data.dt <- fread("processed.csv")
-data.dt[, date := as.Date(date)]
+data.dt <- read.csv("processed.csv")
+data.dt$date <- data.dt$date
 
 # plot.weekly <- function(variable.x, data.x){
 #   if(variable.x != "Comments"){
