@@ -17,4 +17,5 @@ shinyServer(function(input, output) {
             ylab="Number of Telephones",
             xlab="Year")
   })
+  output$plot <- renderText(as.character(input$variable))
 })
