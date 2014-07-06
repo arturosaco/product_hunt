@@ -7,16 +7,18 @@ library(datasets)
 data.dt <- read.csv("processed.csv")
 plot.weekly <- function(variable.x, data.x){
   if(variable.x != "Comments"){
-    data.x.1 <- data.x[data.x$max.daily.votes.share == votes.share.w, ]
+    data.x.1 <- data.x[data.x$max.daily.votes.share == 
+      data.x$votes.share.w, ]
     names(data.x.1)[names(data.x.1) == "votes.share.w"] <- "y"
     y.label <- "Share of week's votes"
   } else {
-    data.x.1 <- data.x[data.x$max.daily.comment.share == comments.share.w, ]
+    data.x.1 <- data.x[data.x$max.daily.comment.share == 
+      data.x$comments.share.w, ]
     names(data.x.1)[names(data.x.1) == "comments.share.w"] <- "y"
     y.label <- "Share of week's comments"
   }
   data.x.1$id <- 1:nrow(data.x.1)
-  data.x.1 <- data.x.1 %>% as.data.frame 
+  data.x.1 <- as.data.frame (data.x.1)
   # data.x.1 %>% 
   #   ggvis(x = ~date, y = ~100 * y, key := ~id) %>%
   #     layer_lines() %>% 
