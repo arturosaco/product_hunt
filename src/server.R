@@ -1,10 +1,9 @@
 install.packages(c('ggvis', 'shiny', 
-  "data.table", "lubridate", "magrittr",
-  "dplyr"))
+  "data.table", "lubridate", "magrittr"))
 
-library(ggvis)
+library(ggplot2)
 library(shiny)
-library(dplyr)
+# library(dplyr)
 library(data.table)
 library(lubridate)
 library(magrittr)

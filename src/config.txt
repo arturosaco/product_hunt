@@ -1,0 +1,12 @@
+run_as shiny;
+
+server {
+  listen 3838 0.0.0.0;
+  app_init_timeout 600;
+  app_idle_timeout 604800;
+  location / {
+    site_dir /home/arturo.correa/Projects/opigram_recs/src/opi_app/;
+    log_dir /home/arturo.correa/Projects/opigram_recs/src/opi_app/log/;
+    directory_index on;
+  }
+}
