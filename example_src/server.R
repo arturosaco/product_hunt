@@ -5,9 +5,9 @@ library(ggplot2)
 # package (which generally comes preloaded).
 library(datasets)
 
+# data.dt <- read.csv("simple.csv")
+load("simple.RData")
 
-
-data.dt <- read.csv("simple.csv")  
 # Define a server for the Shiny app
 shinyServer(function(input, output) {
   # Fill in the spot we created for a plot
