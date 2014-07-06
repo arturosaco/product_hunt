@@ -4,6 +4,7 @@ library(ggvis)
 # Rely on the 'WorldPhones' dataset in the datasets
 # package (which generally comes preloaded).
 library(datasets)
+data.dt <- read.csv("processed.csv")
  
 # Define a server for the Shiny app
 shinyServer(function(input, output) {
