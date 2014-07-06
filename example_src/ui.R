@@ -28,9 +28,10 @@ shinyUI(
       
       # Create a spot for the barplot
       mainPanel(
+        textOutput("ls"),
         plotOutput("phonePlot"),
-        textOutput("plot"),
-        tableOutput("head1")
+        textOutput("plot")
+        #tableOutput("head1")
       )
       
     )
