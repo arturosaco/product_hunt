@@ -4,12 +4,12 @@
 library(ggplot2)
 library(shiny)
 # library(dplyr)
-library(data.table)
+# library(data.table)
 library(lubridate)
 library(magrittr)
 
-data.dt <- read.csv("processed.csv")
-data.dt$date <- data.dt$date
+# data.dt <- read.csv("processed.csv")
+# data.dt$date <- data.dt$date
 
 # plot.weekly <- function(variable.x, data.x){
 #   if(variable.x != "Comments"){
