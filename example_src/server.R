@@ -1,5 +1,5 @@
 library(shiny)
-library(ggvis)
+library(ggplot2)
  
 # Rely on the 'WorldPhones' dataset in the datasets
 # package (which generally comes preloaded).
