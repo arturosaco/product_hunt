@@ -5,8 +5,8 @@ server {
   app_init_timeout 600;
   app_idle_timeout 604800;
   location / {
-    site_dir /product_hunt$ /home/ubuntu/product_hunt/src/;
-    log_dir /product_hunt$ /home/ubuntu/product_hunt/src/;
+    site_dir /home/ubuntu/product_hunt/src/;
+    log_dir /home/ubuntu/product_hunt/src/;
     directory_index on;
   }
 }
