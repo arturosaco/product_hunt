@@ -59,6 +59,3 @@ setnames(data.dt, c("date.1", "n.comments.1"),
   c("date", "n.comments"))
 
 write.csv(unique(data.dt), "src/download.csv", row.names = FALSE)
-
-
-shinyapps::configureApp("product_hunt_3", size="medium")
