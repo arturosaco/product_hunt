@@ -1,7 +1,7 @@
 library(ProjectTemplate)
 load.project()
 
-url.list <- paste0("http://www.producthunt.com/?page=", 0:50, "#")
+url.list <- paste0("http://www.producthunt.com/?page=", 0:74, "#")
 
 download.page <- function(url.x){
   doc <- htmlTreeParse(url.x, useInternalNodes = T)
@@ -59,6 +59,3 @@ setnames(data.dt, c("date.1", "n.comments.1"),
   c("date", "n.comments"))
 
 write.csv(unique(data.dt), "src/download.csv", row.names = FALSE)
-
-
-shinyapps::configureApp("product_hunt_3", size="medium")

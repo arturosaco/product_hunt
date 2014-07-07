@@ -1,0 +1,1156 @@
+rm(list = ls())
+library(ProjectTemplate)#
+load.project()#
+#
+library(XML)#
+library(stringr)#
+library(magrittr)#
+library(data.table)#
+library(ggplot2)#
+#
+url.list <- paste0("http://www.producthunt.com/?page=", 0:30, "#")
+download.page <- function(url.x){#
+  doc <- htmlTreeParse(url.x, useInternalNodes = T)#
+  docs.df <- xpathApply(doc, #
+    "//div[normalize-space(@class)='day']",#
+    function(day.x){#
+      date.x <- xmlChildren(day.x)$time %>% #
+        xmlChildren %>% use_series("text") %>%#
+          xmlValue#
+      list.posts <- xmlChildren(day.x)$table %>% xmlChildren#
+      list.info <- lapply(list.posts, function(post.x){#
+        # browser()#
+        name <- post.x[[5]][[2]] %>% #
+          xmlChildren %>% use_series("text") %>%#
+          xmlValue#
+        up.votes <- post.x[[1]] %>% #
+          xmlChildren %>% #
+          use_series("span") %>% #
+          xmlChildren %>% #
+          use_series("text") %>%#
+          xmlValue#
+        n.comments <- post.x %>%#
+          xmlValue %>%#
+          str_extract("[0-9]+ comments?|View details")#
+        c(name = as.character(name),#
+          up.votes = as.character(up.votes),#
+          n.comments = n.comments)#
+      })#
+      names(list.info) <- NULL#
+      info.df <- data.frame(Reduce(rbind, list.info))#
+      info.df$date <- date.x#
+      info.df$date <- gsub("\n", "", info.df$date)#
+      info.df$date <- str_trim(info.df$date)#
+      info.df$n.comments <- gsub("\n", "", info.df$n.comments)#
+      info.df$n.comments <- str_trim(info.df$n.comments)    #
+      info.df#
+  })#
+#
+}#
+data <- lapply(url.list, function(url.x){#
+  download.page(url.x) %>% Reduce(rbind, .)  #
+}) %>% Reduce(rbind, .)#
+#
+data$date.aux <- gsub("[a-zA-Z]*, ", "", data$date)#
+data$date.aux <- paste(gsub("[a-z]{2,2}$", "", data$date.aux), "2014")#
+data$date.1 <- as.Date(data$date.aux, "%B%d%Y")#
+data$n.comments.1 <- gsub("[^0-9]", "", data$n.comments) #
+data[data$n.comments.1 == "", "n.comments.1"] <- 0#
+data$up.votes <- as.numeric(as.character(data$up.votes))#
+data.dt <- as.data.table(data[, c("name", "up.votes", #
+  "date.1", "n.comments.1")]) %>% unique#
+setnames(data.dt, c("date.1", "n.comments.1"), #
+  c("date", "n.comments"))#
+data.dt[, vote.share := up.votes / sum(up.votes), date]#
+data.dt[, daily.votes := sum(up.votes), date]
+head(data.dt)
+ggplot(data.dt[, sum(n.comments), date], #
+  aes(x = date, y = V1)) + geom_line()
+data$n.comments <- as.numeric(as.character(data$n.comments))#
+data.dt <- as.data.table(data[, c("name", "up.votes", #
+  "date.1", "n.comments.1")]) %>% unique#
+setnames(data.dt, c("date.1", "n.comments.1"), #
+  c("date", "n.comments"))#
+data.dt[, vote.share := up.votes / sum(up.votes), date]#
+data.dt[, daily.votes := sum(up.votes), date]
+ggplot(data.dt[, sum(n.comments), date], #
+  aes(x = date, y = V1)) + geom_line()
+data$n.comments <- as.numeric(as.character(data$n.comments))
+head(data)
+data <- lapply(url.list, function(url.x){#
+  download.page(url.x) %>% Reduce(rbind, .)  #
+}) %>% Reduce(rbind, .)
+data$date.aux <- gsub("[a-zA-Z]*, ", "", data$date)#
+data$date.aux <- paste(gsub("[a-z]{2,2}$", "", data$date.aux), "2014")#
+data$date.1 <- as.Date(data$date.aux, "%B%d%Y")#
+data$n.comments.1 <- gsub("[^0-9]", "", data$n.comments) #
+data[data$n.comments.1 == "", "n.comments.1"] <- 0#
+data$up.votes <- as.numeric(as.character(data$up.votes))
+head(data)
+data$n.comments.1 <- as.numeric(as.character(data$n.comments.1))
+data.dt <- as.data.table(data[, c("name", "up.votes", #
+  "date.1", "n.comments.1")]) %>% unique#
+setnames(data.dt, c("date.1", "n.comments.1"), #
+  c("date", "n.comments"))#
+data.dt[, vote.share := up.votes / sum(up.votes), date]#
+data.dt[, daily.votes := sum(up.votes), date]
+head(data.dt)
+data.dt[, comments.share := n.comments / sum(n.comments), date]
+ggplot(data.dt[, sum(n.comments), date], #
+  aes(x = date, y = V1)) + geom_line()
+ggplot(data.dt, #
+  aes(x = date, y = comments.share)) + geom_line()
+ggplot(data.dt[, max(comments.share), date], #
+  aes(x = date, y = comments.share)) + geom_line()
+ggplot(data.dt[, max(comments.share), date], #
+  aes(x = date, y = V1)) + geom_line()
+data.dt[, sum(up.votes), date] %>% as.data.frame %>%#
+  ggvis(~date, ~V1) %>% layer_lines() %>% layer_points()
+data.dt[, max(comments.share), date] %>% as.data.frame %>%#
+  ggvis(~date, ~V1) %>% layer_lines() %>% layer_points()
+mtcars %>% ggvis(x = ~wt, y = ~mpg, size.hover := 200) %>%#
+  layer_points()
+mtcars %>%#
+  ggvis(x = ~wt, y = ~mpg, size.hover := 200,#
+        stroke := NA, stroke.hover := "red", strokeWidth := 3) %>%#
+  layer_points()
+pressure %>% ggvis(x = ~temperature, y = ~pressure) %>%#
+  layer_paths(stroke.hover := "red", strokeWidth.hover := 4, strokeWidth := 2) %>%#
+  layer_points(size := 50, size.hover := 200) %>%#
+  set_options(hover_duration = 250)
+mtcars %>% ggvis(x = ~wt, y = ~mpg) %>%#
+  layer_points() %>%#
+  layer_smooths(fill.hover := "red", se = TRUE)
+PlantGrowth %>% group_by(group) %>%#
+  ggvis(x = ~weight, stroke = ~group, fill = ~group,#
+        fillOpacity := 0.2, fillOpacity.hover := .5) %>%#
+  layer_densities()
+data.dt[, max(comments.share), date] %>% as.data.frame %>%#
+  ggvis(~date, ~V1) %>% layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$name)
+data.dt[, max(comments.share), date] %>% as.data.frame %>%#
+  ggvis(~date, ~V1) %>% layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$name)
+data.dt[, max(comments.share), date] %>% as.data.frame %>%#
+  ggvis(~date, ~V1) %>% layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$name)
+data.dt[, max(comments.share), date] %>% as.data.frame %>%#
+  ggvis(~date, ~V1) %>% layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$date)
+data.dt[, max(comments.share), date] %>% as.data.frame %>%#
+  ggvis(~date, ~V1) %>% layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$V1)
+?add_tooltip
+all_values <- function(x) {#
+  if(is.null(x)) return(NULL)#
+  paste0(names(x), ": ", format(x), collapse = "<br />")#
+}
+all_values <- function(x) {#
+  if(is.null(x)) return(NULL)#
+  paste0(names(x), ": ", format(x), collapse = "<br />")#
+}#
+#
+data.dt[, max(comments.share), date] %>% as.data.frame %>%#
+  ggvis(~date, ~V1) %>% layer_lines() %>% layer_points() %>%#
+  add_tooltip(all_values, "hover")
+?ggvis
+data.dt[, max.daily.comment.share := max(comments.share), date]
+data.dt
+data.dt[max.daily.comment.share == comments.share, ]
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(~date, ~V1) %>% layer_lines() %>% layer_points()
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(~date, ~comments.share) %>%#
+  layer_lines() %>% layer_points()
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(~date, ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$name)
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(~date, ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$comments.share)
+head(data.dt[max.daily.comment.share == comments.share, ])
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$comments.share)
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$n.comments)
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share, ~name) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$name)
+?add_tooltip
+class(data.dt$name)
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share, ~name) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) as.character(df$name))
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) as.character(df$name))
+data.dt[, name := as.character(name)]
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$name)
+head(data.dt)
+class(data.dt$name)
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) as.character(df$n.comments))
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) as.character(paste(df$name, df$n.comments)))
+data.dt[, name.aux := as.character(name)]
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) as.character(paste(df$name.aux, df$n.comments)))
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) as.character(paste("blah", df$n.comments)))
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) paste("blah", df$n.comments))
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) paste("blah", nrow(df)))
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) paste("blah", class(df)))
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) paste("blah", dim(df)))
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) names(df))
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) ls())
+data.dt[max.daily.comment.share == comments.share, ]
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$name.aux)
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$name.aux)
+?ggvis
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~name.aux) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$name.aux)
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~name.aux) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) df$name.aux)
+mtc <- mtcars#
+mtc$id <- 1:nrow(mtc)#
+#
+all_values <- function(x) {#
+  if(is.null(x)) return(NULL)#
+  row <- mtc[mtc$id == x$id, ]#
+  paste0(names(row), ": ", format(row), collapse = "<br />")#
+}#
+#
+mtc %>% ggvis(x = ~wt, y = ~mpg, key := ~id) %>%#
+  layer_points() %>%#
+  add_tooltip(all_values, "hover")
+mtc <- mtcars#
+mtc$id <- 1:nrow(mtc)#
+#
+all_values <- function(x) {#
+  if(is.null(x)) return(NULL)#
+  row <- mtc[mtc$id == x$id, ]#
+  paste0(names(row), ": ", format(row), collapse = "<br />")#
+}
+mtc %>% ggvis(x = ~wt, y = ~mpg, key := ~id) %>%#
+  layer_points() %>%#
+  add_tooltip(all_values, "hover")
+data.dt[max.daily.comment.share == comments.share, ] %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~name.aux) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df) names(df))
+data.1 <- data.dt[max.daily.comment.share == comments.share, ]
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~name.aux) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    data.1[data.1$name.aux == df$name.aux, "name.aux"]#
+  } names(df))
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~name.aux) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    data.1[data.1$name.aux == df$name.aux, "name.aux"]#
+  })
+data.1$id <- 1:nrow(data.1)
+data.1$id <- 1:nrow(data.1)
+data.1 %>%#
+  as.data.frame
+names(data.1)
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    data.1[data.1$id == df$id, "name.aux"]#
+  })
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    data.1[data.1$id == df$id, name.aux]#
+  })
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      Ncomments = data.1[data.1$id == df$id, n.comments],#
+      UpVotes = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  })
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  })
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  })
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points() %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  })
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size = 2) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  })
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size = 5) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  })
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size = 50) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  })
+?layer_point
+?layer_points
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size := input_slider(100, 1000, value = 100)) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  })
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size = 150) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  })
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size := 150) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  })
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~100 * comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size := 150) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  })
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~100 * comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size := 150) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  }) %>% ylab("Comments share")
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~100 * comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size := 150) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  }) %>% add_axis("date", title = "Date")
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~100 * comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size := 150) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  }) %>% add_axis("x", title = "Date")
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~100 * comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size := 150) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  }) %>% add_axis("x", title = "Date") %>%#
+  add_axis("y", title = "Comments share")
+data.dt[, date.w := floor_date(date, "weeks")]
+library(lubridate)
+install.pakcages("lubridate")
+install.packages("lubridate")
+library(lubridate)
+data.dt[, date.w := floor_date(date, "weeks")]
+data.dt[, date.w := floor_date(date, "week")]
+data.dt[, comment.share.w := n.comments / sum(n.comments), date.w]
+head(data.dt)
+data.dt[, max.daily.comment.share := max(comments.share.w), date]
+data.dt[, comments.share.w := n.comments / sum(n.comments), date.w]
+data.dt[, max.daily.comment.share := max(comments.share.w), date]
+data.1 <- data.dt[max.daily.comment.share == comments.share.w, ]
+data.1$id <- 1:nrow(data.1)
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~100 * comments.share,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size := 150) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  }) %>% add_axis("x", title = "Date") %>%#
+  add_axis("y", title = "Comments share")
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~100 * comments.share.w,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size := 150) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  }) %>% add_axis("x", title = "Date") %>%#
+  add_axis("y", title = "Comments share")
+url.list <- paste0("http://www.producthunt.com/?page=", 0:50, "#")
+data <- lapply(url.list, function(url.x){#
+  download.page(url.x) %>% Reduce(rbind, .)  #
+}) %>% Reduce(rbind, .)#
+#
+data$date.aux <- gsub("[a-zA-Z]*, ", "", data$date)#
+data$date.aux <- paste(gsub("[a-z]{2,2}$", "", data$date.aux), "2014")#
+data$date.1 <- as.Date(data$date.aux, "%B%d%Y")#
+data$n.comments.1 <- gsub("[^0-9]", "", data$n.comments) #
+data[data$n.comments.1 == "", "n.comments.1"] <- 0#
+data$up.votes <- as.numeric(as.character(data$up.votes))#
+#
+data$n.comments.1 <- as.numeric(as.character(data$n.comments.1))#
+data.dt <- as.data.table(data[, c("name", "up.votes", #
+  "date.1", "n.comments.1")]) %>% unique#
+setnames(data.dt, c("date.1", "n.comments.1"), #
+  c("date", "n.comments"))#
+data.dt[, vote.share := up.votes / sum(up.votes), date]#
+data.dt[, comments.share := n.comments / sum(n.comments), date]#
+data.dt[, daily.votes := sum(up.votes), date]#
+data.dt[, name.aux := as.character(name)]#
+library(lubridate)#
+data.dt[, date.w := floor_date(date, "week")]#
+data.dt[, comments.share.w := n.comments / sum(n.comments), date.w]#
+data.dt[, max.daily.comment.share := max(comments.share.w), date]#
+#
+data.1 <- data.dt[max.daily.comment.share == comments.share.w, ]#
+data.1$id <- 1:nrow(data.1)#
+#
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~100 * comments.share.w,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size := 150) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name.aux],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  }) %>% add_axis("x", title = "Date") %>%#
+  add_axis("y", title = "Comments share")
+system("mkdir cache")
+getwd()
+saveRDS
+setwd("Proyectos/product_hunt/")
+library(ProjectTemplate)#
+load.project()
+install.packages("log4r")
+library(ProjectTemplate)#
+load.project()
+Sys.Date()
+path.x <- paste0("cache/download_",#
+  gsub("-", "", Sys.Date()), ".rds")
+path.x
+path.x <- paste0("cache/download_",#
+  gsub("-", "_", Sys.Date()), ".rds")#
+saveRDS(unique(data.dt), "")
+path.x <- paste0("cache/download_",#
+  gsub("-", "_", Sys.Date()), ".rds")
+path.x
+library(ProjectTemplate)#
+load.project()#
+#
+url.list <- paste0("http://www.producthunt.com/?page=", 0:50, "#")#
+#
+download.page <- function(url.x){#
+  doc <- htmlTreeParse(url.x, useInternalNodes = T)#
+  docs.df <- xpathApply(doc, #
+    "//div[normalize-space(@class)='day']",#
+    function(day.x){#
+      date.x <- xmlChildren(day.x)$time %>% #
+        xmlChildren %>% use_series("text") %>%#
+          xmlValue#
+      list.posts <- xmlChildren(day.x)$table %>% xmlChildren#
+      list.info <- lapply(list.posts, function(post.x){#
+        # browser()#
+        name <- post.x[[5]][[2]] %>% #
+          xmlChildren %>% use_series("text") %>%#
+          xmlValue#
+        up.votes <- post.x[[1]] %>% #
+          xmlChildren %>% #
+          use_series("span") %>% #
+          xmlChildren %>% #
+          use_series("text") %>%#
+          xmlValue#
+        n.comments <- post.x %>%#
+          xmlValue %>%#
+          str_extract("[0-9]+ comments?|View details")#
+        c(name = as.character(name),#
+          up.votes = as.character(up.votes),#
+          n.comments = n.comments)#
+      })#
+      names(list.info) <- NULL#
+      info.df <- data.frame(Reduce(rbind, list.info))#
+      info.df$date <- date.x#
+      info.df$date <- gsub("\n", "", info.df$date)#
+      info.df$date <- str_trim(info.df$date)#
+      info.df$n.comments <- gsub("\n", "", info.df$n.comments)#
+      info.df$n.comments <- str_trim(info.df$n.comments)    #
+      info.df#
+  })#
+#
+}#
+data <- lapply(url.list, function(url.x){#
+  download.page(url.x) %>% Reduce(rbind, .)  #
+}) %>% Reduce(rbind, .)#
+#
+data$date.aux <- gsub("[a-zA-Z]*, ", "", data$date)#
+data$date.aux <- paste(gsub("[a-z]{2,2}$", "", data$date.aux), "2014")#
+data$date.1 <- as.Date(data$date.aux, "%B%d%Y")#
+data$n.comments.1 <- gsub("[^0-9]", "", data$n.comments) #
+data[data$n.comments.1 == "", "n.comments.1"] <- 0#
+data$up.votes <- as.numeric(as.character(data$up.votes))#
+#
+data$n.comments.1 <- as.numeric(as.character(data$n.comments.1))#
+data.dt <- as.data.table(data[, c("name", "up.votes", #
+  "date.1", "n.comments.1")]) %>% unique#
+setnames(data.dt, c("date.1", "n.comments.1"), #
+  c("date", "n.comments"))#
+path.x <- paste0("cache/download_",#
+  gsub("-", "_", Sys.Date()), ".rds")#
+saveRDS(unique(data.dt), path.x)
+path.x <- paste0("cache/download_",#
+  gsub("-", "_", Sys.Date()), ".rds")#
+data.dt <- readRDS(path.x)
+dim(data.dt)
+head(data.dt)
+library(ProjectTemplate)#
+load.project()#
+#
+path.x <- paste0("cache/download_",#
+  gsub("-", "_", Sys.Date()), ".rds")#
+data.dt <- readRDS(path.x)#
+#
+data.dt[, vote.share := up.votes / sum(up.votes), date]#
+data.dt[, comments.share := n.comments / sum(n.comments), date]#
+data.dt[, daily.votes := sum(up.votes), date]#
+#
+data.dt[, name := as.character(name)]#
+data.dt[, date.w := floor_date(date, "week")]#
+data.dt[, comments.share.w := n.comments / sum(n.comments), date.w]#
+data.dt[, max.daily.comment.share := max(comments.share.w), date]#
+#
+data.1 <- data.dt[max.daily.comment.share == comments.share.w, ]#
+data.1$id <- 1:nrow(data.1)
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~100 * comments.share.w,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size := 150) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  }) %>% add_axis("x", title = "Date") %>%#
+  add_axis("y", title = "Comments share")
+data.dt <- readRDS(path.x)#
+#
+# data.dt[, vote.share := up.votes / sum(up.votes), date]#
+# data.dt[, comments.share := n.comments / sum(n.comments), date]#
+# data.dt[, daily.votes := sum(up.votes), date]#
+#
+data.dt[, name := as.character(name)]#
+data.dt[, date.w := floor_date(date, "week")]#
+data.dt[, comments.share.w := n.comments / sum(n.comments), date.w]#
+data.dt[, max.daily.comment.share := max(comments.share.w), date]#
+#
+data.1 <- data.dt[max.daily.comment.share == comments.share.w, ]#
+data.1$id <- 1:nrow(data.1)#
+#
+data.1 %>%#
+  as.data.frame %>%#
+  ggvis(x = ~date, y = ~100 * comments.share.w,#
+    key := ~id) %>%#
+  layer_lines() %>% layer_points(size := 150) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  }) %>% add_axis("x", title = "Date") %>%#
+  add_axis("y", title = "Comments share")
+head(data.dt)
+data.dt[, votes.share.w := up.votes / sum(up.votes), date.w]
+data.dt[, max.daily.votes.share := max(comments.votes.w), date]
+data.dt[, max.daily.votes.share := max(votes.share.w), date]
+data.2 <- data.dt[max.daily.votes.share == votes.share.w, ]#
+data.2$id <- 1:nrow(data.2)
+head(data.2)
+data.1 %>% as.data.frame %>%#
+  ggvis(x = ~date, y = ~100 * comments.share.w, key := ~id) %>%#
+  layer_lines() %>% #
+  layer_points(size := 150) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  }) %>% add_axis("x", title = "Date") %>%#
+  add_axis("y", title = "Share of week's comments")
+data.2 <- data.dt[max.daily.votes.share == votes.share.w, ]#
+data.2$id <- 1:nrow(data.2)#
+#
+data.2 %>% as.data.frame %>%#
+  ggvis(x = ~date, y = ~100 * votes.share.w, key := ~id) %>%#
+  layer_lines() %>% #
+  layer_points(size := 150) %>%#
+  add_tooltip(function(df){#
+    if(is.null(df)) return(NULL)#
+    out <- c(#
+      Name = data.1[data.1$id == df$id, name],#
+      `# Comments` = data.1[data.1$id == df$id, n.comments],#
+      `# Up Votes` = data.1[data.1$id == df$id, up.votes])#
+    paste0(names(out), ": ", format(out), collapse = "<br />")#
+  }) %>% add_axis("x", title = "Date") %>%#
+  add_axis("y", title = "Share of week's votes")
+path.x <- paste0("cache/download_",#
+  gsub("-", "_", Sys.Date()), ".rds")#
+data.dt <- readRDS(path.x)#
+#
+data.dt[, name := as.character(name)]#
+data.dt[, date.w := floor_date(date, "week")]#
+data.dt[, comments.share.w := n.comments / sum(n.comments), date.w]#
+data.dt[, votes.share.w := up.votes / sum(up.votes), date.w]#
+data.dt[, max.daily.comment.share := max(comments.share.w), date]#
+data.dt[, max.daily.votes.share := max(votes.share.w), date]#
+#
+path.x <- paste0("cache/processed_",#
+  gsub("-", "_", Sys.Date()), ".rds")#
+saveRDS(data.dt, path.x)
+runApp("src")
+runApp("src")
+runApp("src")
+runApp("src")
+runApp("src")
+runApp("src")
+runApp("src")
+runApp("src")
+runApp("src")
+runApp("src")
+runApp("src")
+paste(dim(data.1[data.1$id == df$id, ]), collapse = ",")
+paste(dim(data.1), collapse = ",")
+runApp("src")
+library(ggvis)#
+#simple summary brush tooltip#
+x_bar <- "x&#772;"#
+sigma_hat <- "&sigma;&#770;"#
+#
+brushed_summary <- function(items, session, page_loc, ...) {#
+  if (nrow(items) == 0) return()#
+#
+  items$key__ <- NULL#
+  lines <- Map(function(name, vals) {#
+    paste0(name, ": ",#
+      x_bar, " = ", round(mean(vals), 2), " ",#
+      sigma_hat, " = ", round(sd(vals), 2)#
+    )#
+  }, names(items), items)#
+  html <- paste(unlist(lines), collapse = "<br />\n")#
+#
+  show_tooltip(session, page_loc$r + 5, page_loc$t, html)#
+}#
+#
+# Scatter plot with brushing#
+mtcars %>% ggvis(x = ~wt, y = ~mpg) %>%#
+  layer_points(size.brush := 400) %>%#
+  handle_brush(brushed_summary)#
+#
+# Bar graph with brushing#
+pressure %>% ggvis(x = ~temperature, y = ~pressure) %>%#
+  scale_nominal("x", range = "width", padding = 0, points = FALSE) %>%#
+  layer_rects(y2 = 0, width = band(), fill.brush := "red") %>%#
+  handle_brush(brushed_summary)#
+#
+# Brushing with 10000 points#
+data("diamonds", package="ggplot2")#
+d <- diamonds[sample(nrow(diamonds), 10000), ]#
+d %>% ggvis(x = ~carat, y = ~price) %>%#
+  layer_points(size := 40, fillOpacity := 0.02, fillOpacity.brush := 0.4) %>%#
+  handle_brush(brushed_summary)
+# Slider input in transform_smooth#
+mtcars %>% ggvis(x = ~wt, y = ~mpg) %>%#
+  layer_points() %>%#
+  layer_smooths(#
+    span = input_slider(0.2, 1, value = 0.5, step = 0.05, label = "span")#
+  )
+mtcars %>% ggvis(x = ~wt) %>%#
+  layer_densities(#
+    adjust = input_slider(.1, 2, value = 1, step = .1, label = "Bandwidth adjustment"),#
+    kernel = input_select(#
+      c("Gaussian" = "gaussian", "Epanechnikov" = "epanechnikov",#
+        "Rectangular" = "rectangular", "Triangular" = "triangular",#
+        "Biweight" = "biweight", "Cosine" = "cosine", "Optcosine" = "optcosine"),#
+      label = "Kernel")#
+  )
+# Example with value map function#
+mtcars %>% ggvis(x = ~wt, y = ~mpg) %>%#
+  layer_points() %>%#
+  layer_model_predictions(model = "loess",#
+    model_args = list(n = input_select(#
+      choices = c("Two", "Six", "Eighty"),#
+      map = function(value) switch(value, Two = 2, Six = 6, Eighty = 80),#
+      label = "Number of points"#
+    ))#
+  )
+# Radio buttons#
+mtcars %>% ggvis(x = ~wt, y = ~mpg) %>%#
+  layer_points() %>%#
+  layer_model_predictions(#
+    model = input_radiobuttons(c("LOESS" = "loess", "Linear" = "lm"),#
+      label = "Model type"),#
+    stroke := input_radiobuttons(c("Red" = "red", "Black" = "black"),#
+      label = "Line color")#
+  )
+runApp("src")
+runApp("src")
+runApp("src")
+runApp("src")
+head(data.dt)
+runApp("src")
+runApp("src")
+runApp("src")
+runApp("src")
+runApp("src")
+?selectInput
+runApp("src")
+runApp("src")
+devtools::install_github('rstudio/shinyapps')
+install.packages("devtools")
+devtools::install_github('rstudio/shinyapps')
+library(shinyapps)
+shinyapps::setAccountInfo(#
+  name="arturosaco", #
+  token="484805730F9D65173B12C5FC4EEA99DC", #
+  secret="<SECRET>")
+shinyapps::setAccountInfo(name='arturosaco', token='484805730F9D65173B12C5FC4EEA99DC', secret='dBzq7KYATk/szpNEIoxzFUaAHHBkoaufzFir9d34')
+terminateApp("1_interactive")
+deployApp("src")
+deployApp(appDir = "src", appName = "ProductHunt1")
+terminateApp("ProductHunt1")
+library(ProjectTemplate)#
+load.project()#
+#
+url.list <- paste0("http://www.producthunt.com/?page=", 0:50, "#")#
+#
+download.page <- function(url.x){#
+  doc <- htmlTreeParse(url.x, useInternalNodes = T)#
+  docs.df <- xpathApply(doc, #
+    "//div[normalize-space(@class)='day']",#
+    function(day.x){#
+      date.x <- xmlChildren(day.x)$time %>% #
+        xmlChildren %>% use_series("text") %>%#
+          xmlValue#
+      list.posts <- xmlChildren(day.x)$table %>% xmlChildren#
+      list.info <- lapply(list.posts, function(post.x){#
+        # browser()#
+        name <- post.x[[5]][[2]] %>% #
+          xmlChildren %>% use_series("text") %>%#
+          xmlValue#
+        up.votes <- post.x[[1]] %>% #
+          xmlChildren %>% #
+          use_series("span") %>% #
+          xmlChildren %>% #
+          use_series("text") %>%#
+          xmlValue#
+        n.comments <- post.x %>%#
+          xmlValue %>%#
+          str_extract("[0-9]+ comments?|View details")#
+        c(name = as.character(name),#
+          up.votes = as.character(up.votes),#
+          n.comments = n.comments)#
+      })#
+      names(list.info) <- NULL#
+      info.df <- data.frame(Reduce(rbind, list.info))#
+      info.df$date <- date.x#
+      info.df$date <- gsub("\n", "", info.df$date)#
+      info.df$date <- str_trim(info.df$date)#
+      info.df$n.comments <- gsub("\n", "", info.df$n.comments)#
+      info.df$n.comments <- str_trim(info.df$n.comments)    #
+      info.df#
+  })#
+#
+}#
+data <- lapply(url.list, function(url.x){#
+  download.page(url.x) %>% Reduce(rbind, .)  #
+}) %>% Reduce(rbind, .)#
+#
+data$date.aux <- gsub("[a-zA-Z]*, ", "", data$date)#
+data$date.aux <- paste(gsub("[a-z]{2,2}$", "", data$date.aux), "2014")#
+data$date.1 <- as.Date(data$date.aux, "%B%d%Y")#
+data$n.comments.1 <- gsub("[^0-9]", "", data$n.comments) #
+data[data$n.comments.1 == "", "n.comments.1"] <- 0#
+data$up.votes <- as.numeric(as.character(data$up.votes))#
+#
+data$n.comments.1 <- as.numeric(as.character(data$n.comments.1))#
+data.dt <- as.data.table(data[, c("name", "up.votes", #
+  "date.1", "n.comments.1")]) %>% unique#
+setnames(data.dt, c("date.1", "n.comments.1"), #
+  c("date", "n.comments"))#
+path.x <- paste0("cache/download_",#
+  gsub("-", "_", Sys.Date()), ".rds")#
+saveRDS(unique(data.dt), path.x)
+path.x <- paste0("cache/download_",#
+  gsub("-", "_", Sys.Date()), ".rds")#
+data.dt <- readRDS(path.x)#
+#
+data.dt[, name := as.character(name)]#
+data.dt[, date.w := floor_date(date, "week")]#
+data.dt[, comments.share.w := n.comments / sum(n.comments), date.w]#
+data.dt[, votes.share.w := up.votes / sum(up.votes), date.w]#
+data.dt[, max.daily.comment.share := max(comments.share.w), date]#
+data.dt[, max.daily.votes.share := max(votes.share.w), date]#
+#
+path.x <- paste0("cache/processed_",#
+  gsub("-", "_", Sys.Date()), ".rds")#
+saveRDS(data.dt, path.x)
+path.x <- paste0("../cache/processed_",#
+  gsub("-", "_", Sys.Date()), ".rds")
+path.x
+deployApp(appDir = "src", appName = "ProductHunt1")
+deployApp(appDir = "src", appName = "ProductHunt1")
+deployApp(appDir = "src", appName = "ProductHunt1")
+install.packages("BH")
+install.packages("BH")
+deployApp(appDir = "src", appName = "ProductHunt1")
+deployApp(appDir = "src", appName = "ProductHunt1")
+deployApp(appDir = "src", appName = "ProductHunt1")
+deployApp(appDir = "src", appName = "ProductHunt1")
+deployApp(appDir = "src", appName = "ProductHunt1")
+terminateApp("ProductHunt1")
+deployApp(appDir = "src", appName = "ProductHunt1")
+deployApp(appDir = "src", appName = "ProductHunt1")
+terminateApp("ProductHunt1")
+deployApp(appDir = "src", appName = "ProductHunt1")
+deployApp(appDir = "src", appName = "ProductHunt1")
+terminateApp("ProductHunt1")
+deployApp(appDir = "src", appName = "ProductHunt1")
+terminateApp("ProductHunt1")
+deployApp(appDir = "src", appName = "ProductHunt2")
+terminateApp("ProductHunt2")
+deployApp(appDir = "src", appName = "ProductHunt2")
+terminateApp("ProductHunt2")
+url.list <- paste0("http://www.producthunt.com/?page=", 0:50, "#")#
+#
+download.page <- function(url.x){#
+  doc <- htmlTreeParse(url.x, useInternalNodes = T)#
+  docs.df <- xpathApply(doc, #
+    "//div[normalize-space(@class)='day']",#
+    function(day.x){#
+      date.x <- xmlChildren(day.x)$time %>% #
+        xmlChildren %>% use_series("text") %>%#
+          xmlValue#
+      list.posts <- xmlChildren(day.x)$table %>% xmlChildren#
+      list.info <- lapply(list.posts, function(post.x){#
+        # browser()#
+        name <- post.x[[5]][[2]] %>% #
+          xmlChildren %>% use_series("text") %>%#
+          xmlValue#
+        up.votes <- post.x[[1]] %>% #
+          xmlChildren %>% #
+          use_series("span") %>% #
+          xmlChildren %>% #
+          use_series("text") %>%#
+          xmlValue#
+        n.comments <- post.x %>%#
+          xmlValue %>%#
+          str_extract("[0-9]+ comments?|View details")#
+        c(name = as.character(name),#
+          up.votes = as.character(up.votes),#
+          n.comments = n.comments)#
+      })#
+      names(list.info) <- NULL#
+      info.df <- data.frame(Reduce(rbind, list.info))#
+      info.df$date <- date.x#
+      info.df$date <- gsub("\n", "", info.df$date)#
+      info.df$date <- str_trim(info.df$date)#
+      info.df$n.comments <- gsub("\n", "", info.df$n.comments)#
+      info.df$n.comments <- str_trim(info.df$n.comments)    #
+      info.df#
+  })#
+#
+}#
+data <- lapply(url.list, function(url.x){#
+  download.page(url.x) %>% Reduce(rbind, .)  #
+}) %>% Reduce(rbind, .)#
+#
+data$date.aux <- gsub("[a-zA-Z]*, ", "", data$date)#
+data$date.aux <- paste(gsub("[a-z]{2,2}$", "", data$date.aux), "2014")#
+data$date.1 <- as.Date(data$date.aux, "%B%d%Y")#
+data$n.comments.1 <- gsub("[^0-9]", "", data$n.comments) #
+data[data$n.comments.1 == "", "n.comments.1"] <- 0#
+data$up.votes <- as.numeric(as.character(data$up.votes))#
+#
+data$n.comments.1 <- as.numeric(as.character(data$n.comments.1))#
+data.dt <- as.data.table(data[, c("name", "up.votes", #
+  "date.1", "n.comments.1")]) %>% unique#
+setnames(data.dt, c("date.1", "n.comments.1"), #
+  c("date", "n.comments"))#
+path.x <- paste0("download_",#
+  gsub("-", "_", Sys.Date()), ".csv")#
+write.csv(unique(data.dt), path.x, row.names = FALSE)
+path.x <- paste0("download_",#
+  gsub("-", "_", Sys.Date()), ".csv")#
+data.dt <- fread(path.x)
+data.dt[, name := as.character(name)]#
+data.dt[, date.w := floor_date(date, "week")]#
+data.dt[, comments.share.w := n.comments / sum(n.comments), date.w]#
+data.dt[, votes.share.w := up.votes / sum(up.votes), date.w]#
+data.dt[, max.daily.comment.share := max(comments.share.w), date]#
+data.dt[, max.daily.votes.share := max(votes.share.w), date]
+data.dt[, name := as.character(name)]
+data.dt[, date.w := floor_date(date, "week")]
+head(data.dt)
+data.dt[, date := as.Date(date)]
+data.dt[, date.w := floor_date(date, "week")]
+data.dt[, comments.share.w := n.comments / sum(n.comments), date.w]#
+data.dt[, votes.share.w := up.votes / sum(up.votes), date.w]#
+data.dt[, max.daily.comment.share := max(comments.share.w), date]#
+data.dt[, max.daily.votes.share := max(votes.share.w), date]
+path.x <- paste0("processed_",#
+  gsub("-", "_", Sys.Date()), ".csv")
+path.x
+write.csv(data.dt, path.x, row.names = "FALSE")
+write.csv(data.dt, path.x, row.names = FALSE)
+path.x <- paste0("cache/processed_",#
+  gsub("-", "_", Sys.Date()), ".csv")
+path.x
+data.dt <- fread(path.x)
+paste0("processed_",#
+  gsub("-", "_", Sys.Date()), ".csv")
+path.x <- paste0("cache/processed_",#
+  gsub("-", "_", Sys.Date()), ".csv")
+path.x
+data.dt <- fread(path.x)
+setwd("src/")
+path.x <- paste0("cache/processed_",#
+  gsub("-", "_", Sys.Date()), ".csv")
+data.dt <- fread(path.x)#
+data.dt[, date := as.Date(date)]
+dim(data.dt)
+deployApp(appDir = "src", appName = "ProductHunt2")
+deployApp(appDir = ".-/", appName = "ProductHunt2")
+deployApp(appDir = "./", appName = "ProductHunt2")
+deployApp(appDir = "./", appName = "ProductHunt2")
+terminateApp("ProductHunt2")
+deployApp(appDir = "./", appName = "ProductHunt2")
+terminateApp("ProductHunt2")
+runApp("./")
