@@ -27,7 +27,9 @@ plot.weekly <- function(variable.x, data.x){
         if(is.null(df)) return(NULL)
         out <- c(Name = data.x.1[data.x.1$id == df$id, "name"],
           `# Comments` = data.x.1[data.x.1$id == df$id, "n.comments"],
-          `# Up Votes` = data.x.1[data.x.1$id == df$id, "up.votes"])
+          `# Up Votes` = data.x.1[data.x.1$id == df$id, "upvotes"],
+          `Description` = data.x.1[data.x.1$id == df$id, "description"],
+          `Author's twitter handle` = data.x.1[data.x.1$id == df$id, "tw.handle"])
         paste0(names(out), ": ", format(out), collapse = "<br />")
       }) %>% 
       add_axis("x", title = "Date") %>%
